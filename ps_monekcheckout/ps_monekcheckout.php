@@ -50,6 +50,6 @@ class ps_monekcheckout extends PaymentModule
             return;
         }
 
-        return $this->context->smarty->fetch('module:ps_monekcheckout/views/templates/front/payment_return.tpl');
+        return $this->context->smarty->fetch('module:ps_monekcheckout/views/templates/front/redirect.tpl');
     }
 }
