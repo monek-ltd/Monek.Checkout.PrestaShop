@@ -2,8 +2,9 @@
 
 class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontController
 {
-    private const PARTIAL_ORIGIN_ID = 'a6c921f4-8e00-4b11-99f4-';
-    private $is_test_mode_active = true; // Change this as per your requirement
+    private const PARTIAL_ORIGIN_ID = '7d07f975-b3c6-46b8-8f3a-';
+    public const ELITE_URL = 'https://elite.monek.com/Secure/';
+    public const STAGING_URL = 'https://staging.monek.com/Secure/';
 
     public function postProcess()
     {
@@ -11,25 +12,36 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
         $customer = new Customer($cart->id_customer);
         $currency = $this->context->currency;
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-
+        
         $this->module->validateOrder($cart->id, Configuration::get('PS_OS_PAYMENT'), $total, $this->module->displayName, null, [], (int)$currency->id, false, $customer->secure_key);
 
-        $order = new Order($this->module->currentOrder);
-        $return_url = $this->context->link->getModuleLink($this->module->name, 'return', [], true);
-
-        $body_data = $this->prepare_payment_request_body_data($order, '0000893', '826', $return_url, 'Test Purchase');
+        $body_data = $this->prepare_payment_request_body_data(
+            new Order($this->module->currentOrder), 
+            Configuration::get('MONEKCHECKOUT_MONEK_ID'), 
+            $this->getCountryCode3Digit(Configuration::get('MONEKCHECKOUT_COUNTRY')),
+            $this->context->link->getModuleLink($this->module->name, 'return', [], true), 
+            Configuration::get('MONEKCHECKOUT_BASKET_SUMMARY'));
         $this->send_payment_request($body_data);
+    }
+
+    private function getCountryCode3Digit($iso_code_2digit)
+    {
+        $countries = Country::getCountries($this->context->language->id);
+        foreach ($countries as $country) {
+            if ($country['iso_code'] == $iso_code_2digit) {
+                return $country['id_country'];
+            }
+        }
+        return null; 
     }
 
     private function prepare_payment_request_body_data($order, $merchant_id, $country_code, $return_plugin_url, $purchase_description)
     {
         $billing_amount = $order->getTotalPaid();
         
-        // Generate idempotency token and integrity secret
         $idempotency_token = uniqid($order->id, true);
         $integrity_secret = uniqid($order->id, true);
         
-        // Prepare body data array
         $body_data = array(
             'MerchantID' => $merchant_id,
             'MessageType' => 'ESALE_KEYED',
@@ -43,7 +55,7 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
             'PaymentReference' => $order->id,
             'ThreeDSAction' => 'ACSDIRECT',
             'IdempotencyToken' => $idempotency_token,
-            'OriginID' => self::PARTIAL_ORIGIN_ID . str_replace('.', '', '1.0.0') . str_repeat('0', 14 - strlen('1.0.0')), //TODO Replace '1.0.0' with your plugin version
+            'OriginID' => self::PARTIAL_ORIGIN_ID . str_replace('.', '', '1.0.0') . str_repeat('0', 14 - strlen('1.0.0')), //TODO Replace '1.0.0' with plugin version
             'PurchaseDescription' => $purchase_description,
             'IntegritySecret' => $integrity_secret,
             'Basket' => $this->generate_basket_base64($order),
@@ -59,14 +71,48 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
     {
         $prepared_payment_url = $this->get_ipay_prepare_url();
 
-        Tools::redirect('https://staging.monek.com/Secure/checkout.aspx'. '?' . http_build_query($body_data));
+        //TODO: (for testing) REMOVE
+        //Tools::redirect('https://staging.monek.com/Secure/checkout.aspx'. '?' . http_build_query($body_data));
+
+        $ch = curl_init($prepared_payment_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($body_data));
+
+        //TODO ??
+        if(Configuration::get('MONEKCHECKOUT_TEST_MODE')){
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        }
+
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($http_code == 200) {
+            Tools::redirect($this->get_ipay_url().'?PreparedPayment=' . urlencode($response));
+        } else {
+            PrestaShopLogger::addLog(
+                'Payment request failed. cURL error (' . curl_errno($ch) . '): ' . curl_error($ch) . ', HTTP code: ' . $http_code . ', Response: ' . var_export($response, true),
+                3,
+                null,
+                'ps_monekcheckout',
+                (int)$this->context->cart->id
+            );
+            die('Payment request failed: ' . $response);
+        }
+    }
+    
+    private function get_ipay_url()
+    {
+        $ipay_extension = 'checkout.aspx';
+        return (Configuration::get('MONEKCHECKOUT_TEST_MODE') ? self::STAGING_URL : self::ELITE_URL) . $ipay_extension;
     }
 
     private function get_ipay_prepare_url()
     {
-        //TODO Set correct urls
         $ipay_prepare_extension = 'iPayPrepare.ashx';
-        return ($this->is_test_mode_active ? 'https://staging.url/' : 'https://production.url/') . $ipay_prepare_extension;
+        return (Configuration::get('MONEKCHECKOUT_TEST_MODE') ? self::STAGING_URL : self::ELITE_URL) . $ipay_prepare_extension;
     }
 
     private function generate_basket_base64($order)
@@ -134,7 +180,6 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
             'BillingLine1' => $billing_address->address1 ?? '',
             'BillingLine2' => $billing_address->address2 ?? '',
             'BillingCity' => $billing_address->city ?? '',
-            'BillingCounty' => $billing_address->state ?? '', //TODO: State does not exist. No county info?
             'BillingCountry' => $billing_country->name[$this->context->language->id] ?? '',
             'BillingCountryCode' => $billing_country->iso_code ?? '',
             'BillingPostcode' => $billing_address->postcode ?? '',
@@ -150,7 +195,6 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
             $cardholder_detail_information['DeliveryLine1'] = $delivery_address->address1 ?? '';
             $cardholder_detail_information['DeliveryLine2'] = $delivery_address->address2 ?? '';
             $cardholder_detail_information['DeliveryCity'] = $delivery_address->city ?? '';
-            $cardholder_detail_information['DeliveryCounty'] = $delivery_address->state ?? ''; //TODO: State does not exist. No county info?
             $cardholder_detail_information['DeliveryCountry'] = $delivery_country->name[$this->context->language->id] ?? '';
             $cardholder_detail_information['DeliveryCountryCode'] = $delivery_country->iso_code ?? '';
             $cardholder_detail_information['DeliveryPostcode'] = $delivery_address->postcode ?? '';
@@ -190,8 +234,6 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
         $delivery = array();
         $carrier = new Carrier($order->id_carrier);
 
-        //TODO: check if we can get tracking info??
-
         if ($carrier->id) {
             $delivery[] = array(
                 'carrier' => $carrier->name,
@@ -204,16 +246,13 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
 
     private function get_order_discounts($order)
     {
-        //TODO: Check if this is correct
-        //Discount information is also stored against the order...
-        //TODO: Check how i would add a discount in prestashop.
         $discounts = array();
         $cart_rules = $order->getCartRules();
 
         foreach ($cart_rules as $cart_rule) {
             $discounts[] = array(
-                'code' => $cart_rule['name'],
-                'description' => $cart_rule['description'],
+                'code' => $cart_rule['id_cart_rule'],
+                'description' => $cart_rule['name'],
                 'amount' => $cart_rule['value']
             );
         }
@@ -226,15 +265,11 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
         $taxes = array();
         $order_detail_list = OrderDetail::getList($order->id);
 
-        //TODO: this is currently not working, tax information is stored against the order. 
-        //TODO: Also check how tax is added in prestashop
-
         foreach ($order_detail_list as $order_detail) {
-            $tax = new Tax($order_detail['id_tax']);
             $taxes[] = array(
-                'code' => $tax->name[$this->context->language->id],
-                'description' => $tax->description[$this->context->language->id],
-                'rate' => $tax->rate,
+                'code' => $order_detail['id_tax_rules_group'],
+                'description' => $order_detail['tax_name'],
+                'rate' => $order_detail['tax_rate'],
                 'amount' => $order_detail['total_price_tax_incl'] - $order_detail['total_price_tax_excl']
             );
         }
