@@ -9,6 +9,7 @@ class ps_monekcheckout extends PaymentModule
     const CONFIG_COUNTRY = 'MONEKCHECKOUT_COUNTRY';
     const CONFIG_MONEK_ID = 'MONEKCHECKOUT_MONEK_ID';
     const CONFIG_TEST_MODE = 'MONEKCHECKOUT_TEST_MODE';
+    const AWAITING_ORDER_CONFIRMATION_STATE_ID = 'AWAITING_ORDER_CONFIRMATION_STATE_ID';
 
     public function __construct()
     {
@@ -30,6 +31,21 @@ class ps_monekcheckout extends PaymentModule
 
     public function install()
     {
+        if (!$this->createCustomOrderState()) {
+            return false;
+        }
+        
+        $sql = "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "payment_tokens` ( 
+            `id_cart` int(10) unsigned NOT NULL,
+            `idempotency_token` varchar(255) NOT NULL,
+            `integrity_secret` varchar(255) NOT NULL,
+            PRIMARY KEY (`id_cart`)
+        ) ENGINE=" . _MYSQL_ENGINE_ . " DEFAULT CHARSET=utf8;";
+
+        if (!Db::getInstance()->execute($sql)) {
+            return false;
+        }
+
         return parent::install() &&
             $this->registerHook('paymentOptions') &&
             $this->registerHook('paymentReturn') &&
@@ -46,6 +62,33 @@ class ps_monekcheckout extends PaymentModule
             Configuration::deleteByName(self::CONFIG_COUNTRY) &&
             Configuration::deleteByName(self::CONFIG_MONEK_ID) &&
             Configuration::deleteByName(self::CONFIG_TEST_MODE);
+    }   
+    
+    private function createCustomOrderState()
+    {
+        $orderStateExists = (bool)Db::getInstance()->getValue('SELECT COUNT(*) FROM '._DB_PREFIX_.'order_state WHERE module_name = "ps_monekcheckout"');
+
+        if ($orderStateExists) {
+            return true; 
+        }
+
+        $order_state = new OrderState(); 
+        $order_state->name[Configuration::get('PS_LANG_DEFAULT')] = 'Awaiting Payment Confirmation';
+        $order_state->send_email = false;
+        $order_state->color = '#4169E1'; 
+        $order_state->unremovable = true;
+        $order_state->hidden = false;
+        $order_state->delivery = false;
+        $order_state->logable = true;
+        $order_state->invoice = false;
+        $order_state->module_name = 'ps_monekcheckout';
+
+        if ($order_state->add()) {
+            Configuration::updateValue(self::AWAITING_ORDER_CONFIRMATION_STATE_ID, (int)$order_state->id);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function getContent()
@@ -65,9 +108,9 @@ class ps_monekcheckout extends PaymentModule
             } elseif (empty($basketSummary)) {
                 $output .= $this->displayError($this->l('Basket Summary can not be empty'));
             } else {
-                Configuration::updateValue(self::CONFIG_BASKET_SUMMARY, $basketSummary);
+                Configuration::updateValue(self::CONFIG_BASKET_SUMMARY, $basketSummary); 
                 Configuration::updateValue(self::CONFIG_COUNTRY, $country);
-                Configuration::updateValue(self::CONFIG_MONEK_ID, $monekid);
+                Configuration::updateValue(self::CONFIG_MONEK_ID, $monekid); //TODO: Not updating correctly?
                 Configuration::updateValue(self::CONFIG_TEST_MODE, $testMode);
                 $output .= $this->displayConfirmation($this->l('Settings updated'));
             }
