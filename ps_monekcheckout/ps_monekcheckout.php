@@ -110,7 +110,7 @@ class ps_monekcheckout extends PaymentModule
             } else {
                 Configuration::updateValue(self::CONFIG_BASKET_SUMMARY, $basketSummary); 
                 Configuration::updateValue(self::CONFIG_COUNTRY, $country);
-                Configuration::updateValue(self::CONFIG_MONEK_ID, $monekid); //TODO: Not updating correctly?
+                Configuration::updateValue(self::CONFIG_MONEK_ID, $monekid);
                 Configuration::updateValue(self::CONFIG_TEST_MODE, $testMode);
                 $output .= $this->displayConfirmation($this->l('Settings updated'));
             }
@@ -230,9 +230,9 @@ class ps_monekcheckout extends PaymentModule
         }
 
         $newOption = new PrestaShop\PrestaShop\Core\Payment\PaymentOption();
-        $newOption->setCallToActionText($this->l('Pay securely with Monek'));
+        $newOption->setCallToActionText($this->l('Pay by Debit/Credit Card'));
         $newOption->setAction($this->context->link->getModuleLink($this->name, 'validation', [], true));
-        $newOption->setAdditionalInformation($this->context->smarty->fetch('module:ps_monekcheckout/views/templates/front/redirect.tpl'));
+        $newOption->setAdditionalInformation($this->context->smarty->fetch('module:ps_monekcheckout/views/templates/front/monek_payment_message.tpl'));
 
         return [$newOption];
     }
@@ -243,6 +243,6 @@ class ps_monekcheckout extends PaymentModule
             return;
         }
 
-        return $this->context->smarty->fetch('module:ps_monekcheckout/views/templates/front/redirect.tpl');
+        return $this->context->smarty->fetch('module:ps_monekcheckout/views/templates/front/payment_complete_message.tpl');
     }
 }
