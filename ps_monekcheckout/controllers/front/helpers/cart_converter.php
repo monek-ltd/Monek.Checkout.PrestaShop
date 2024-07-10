@@ -232,7 +232,7 @@ class CartConverter {
             'PaymentReference' => $cart->id,
             'ThreeDSAction' => 'ACSDIRECT',
             'IdempotencyToken' => $idempotency_token,
-            'OriginID' => self::PARTIAL_ORIGIN_ID . str_replace('.', '', '1.0.0') . str_repeat('0', 14 - strlen('1.0.0')), //TODO Replace '1.0.0' with plugin version
+            'OriginID' => self::PARTIAL_ORIGIN_ID . str_replace('.', '',  Module::getInstanceByName("ps_monekcheckout")->version) . str_repeat('0', 14 - strlen(Module::getInstanceByName("ps_monekcheckout")->version)),
             'PurchaseDescription' => $purchase_description,
             'IntegritySecret' => $integrity_secret,
             'Basket' => $this->generate_basket_base64($cart),
