@@ -24,7 +24,7 @@ class ps_monekcheckout extends PaymentModule
         parent::__construct();
 
         $this->displayName = $this->l('Monek Checkout');
-        $this->description = $this->l('Redirects to an external URL for payment.');
+        $this->description = $this->l('Take payments with debit/credit cards securely and easily.');
 
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
     }

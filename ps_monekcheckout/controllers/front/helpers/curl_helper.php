@@ -28,6 +28,8 @@ class CurlHelper {
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
+        
+        PrestaShopLogger::addLog("Executing curl.", 1, null, 'ps_monekcheckout', (int)$order->id);
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
