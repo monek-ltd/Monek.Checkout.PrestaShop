@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>ps_monekcheckout</name>
+    <displayName><![CDATA[Monek Checkout]]></displayName>
+    <version><![CDATA[1.0.0]]></version>
+    <description><![CDATA[Redirects to Monek Checkout for payment using debit/credit card.]]></description>
+    <author><![CDATA[monek]]></author>
+    <tab><![CDATA[payments_gateways]]></tab>
+	<confirmUninstall><![CDATA[Are you sure you want to uninstall?]]></confirmUninstall>
+    <is_configurable>1</is_configurable>
+    <need_instance>1</need_instance>
+</module>
