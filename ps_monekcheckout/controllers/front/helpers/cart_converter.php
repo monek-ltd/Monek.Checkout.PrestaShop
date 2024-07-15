@@ -203,22 +203,21 @@ class CartConverter {
     public function prepare_payment_request_body_data($context, $cart, $merchant_id, $country_code, $return_plugin_url, $purchase_description)
     {
         $billing_amount = $cart->getOrderTotal(true, Cart::BOTH);
-        
+    
         $idempotency_token = uniqid($cart->id, true);
         $integrity_secret = uniqid($cart->id, true);
 
         PrestaShopLogger::addLog('Saving identity tokens to database.', 1, null, 'ps_monekcheckout', (int)$cart->id);
 
-        $sql = "INSERT INTO `" . _DB_PREFIX_ . "payment_tokens` (`id_cart`, `idempotency_token`, `integrity_secret`) VALUES (
-            " . (int)$cart->id . ",
-            '" . pSQL($idempotency_token) . "',
-            '" . pSQL($integrity_secret) . "'
-        ) ON DUPLICATE KEY UPDATE
-            `idempotency_token` = '" . pSQL($idempotency_token) . "',
-            `integrity_secret` = '" . pSQL($integrity_secret) . "';";
+       $data = [
+            'id_cart' => (int)$cart->id,
+            'idempotency_token' => pSQL($idempotency_token),
+            'integrity_secret' => pSQL($integrity_secret),
+        ];
 
-        Db::getInstance()->execute($sql);
-        
+        Db::getInstance()->insert('payment_tokens', $data, false, false, Db::ON_DUPLICATE_KEY);
+
+
         $body_data = array(
             'MerchantID' => $merchant_id,
             'MessageType' => 'ESALE_KEYED',

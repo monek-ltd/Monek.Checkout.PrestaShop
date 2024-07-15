@@ -35,16 +35,22 @@ class ps_monekcheckout extends PaymentModule
             return false;
         }
         
-        $sql = "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "payment_tokens` ( 
+        $tableName = _DB_PREFIX_ . 'payment_tokens';
+        $engine = _MYSQL_ENGINE_;
+        $charset = 'utf8';
+
+        $sql = "CREATE TABLE IF NOT EXISTS `$tableName` (
             `id_cart` int(10) unsigned NOT NULL,
             `idempotency_token` varchar(255) NOT NULL,
             `integrity_secret` varchar(255) NOT NULL,
             PRIMARY KEY (`id_cart`)
-        ) ENGINE=" . _MYSQL_ENGINE_ . " DEFAULT CHARSET=utf8;";
+        ) ENGINE=$engine DEFAULT CHARSET=$charset;";
 
         if (!Db::getInstance()->execute($sql)) {
-            return false;
+            throw new RuntimeException('Table creation failed');
         }
+
+        PrestaShopLogger::addLog('Payment tokens table created successfully.', 1, null, 'ps_monekcheckout');
 
         return parent::install() &&
             $this->registerHook('paymentOptions') &&

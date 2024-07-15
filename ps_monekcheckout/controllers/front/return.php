@@ -21,6 +21,7 @@ class Ps_MonekCheckoutReturnModuleFrontController extends ModuleFrontController
             $this->process_payment_callback();
         }
     }
+
     private function confirm_integrity_digest($order, $transaction_webhook_payload_data)
     {   
         try 
