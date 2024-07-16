@@ -37,7 +37,7 @@ class Ps_MonekCheckoutReturnModuleFrontController extends ModuleFrontController
 
     public function postProcess()
     {
-        $json_echo = Tools::file_get_contents();
+        $json_echo = Tools::file_get_contents('php://input');
         $transaction_webhook_payload_data = json_decode($json_echo, true);
 
         if (isset($transaction_webhook_payload_data)) {

@@ -44,7 +44,7 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
         $cart = $this->context->cart;
         $cartConverter = new CartConverter();
 
-        $bodyData = $cartConverter->preparePaymentRequestBodyData(
+        $bodyData = $cartConverter->prepare_payment_request_body_data(
             $this->context,
             $cart,
             Configuration::get('MONEKCHECKOUT_MONEK_ID'),
@@ -81,7 +81,7 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
 
         $curlHelper = new CurlHelper();
 
-        $response = $curlHelper->remotePost(
+        $response = $curlHelper->remote_post(
             $this->context,
             $preparedPaymentUrl,
             $bodyData,

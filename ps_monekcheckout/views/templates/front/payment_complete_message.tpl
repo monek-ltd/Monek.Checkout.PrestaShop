@@ -1,4 +1,4 @@
-/**
+{*
  * Copyright (c) 2024 Monek Ltd
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,7 +22,7 @@
  *  @author    Monek Ltd
  *  @copyright 2024 Monek Ltd
  *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- */
+ *}
 
 
 <div>
