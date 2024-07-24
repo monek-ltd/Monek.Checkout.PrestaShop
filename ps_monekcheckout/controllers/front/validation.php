@@ -1,4 +1,33 @@
 <?php
+/**
+ * Copyright (c) 2024 Monek Ltd
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ *  @author    Monek Ltd
+ *  @copyright 2024 Monek Ltd
+ *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 require_once 'helpers/cart_converter.php';
 require_once 'helpers/countrycode_converter.php';
 require_once 'helpers/curl_helper.php';
@@ -10,58 +39,65 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
 
     public function postProcess()
     {
-        PrestaShopLogger::addLog('New Monek payment.', 1, null, 'ps_monekcheckout', (int)$this->context->cart->id);
+        PrestaShopLogger::addLog('New Monek payment.', 1, null, 'ps_monekcheckout', (int) $this->context->cart->id);
 
         $cart = $this->context->cart;
-        $cart_converter = new CartConverter(); 
+        $cartConverter = new CartConverter();
 
-        $body_data = $cart_converter->prepare_payment_request_body_data(
+        $bodyData = $cartConverter->prepare_payment_request_body_data(
             $this->context,
-            $cart, 
-            Configuration::get('MONEKCHECKOUT_MONEK_ID'), 
+            $cart,
+            Configuration::get('MONEKCHECKOUT_MONEK_ID'),
             $this->getCountryCode3Digit(Configuration::get('MONEKCHECKOUT_COUNTRY')),
-            $this->context->link->getModuleLink($this->module->name, 'return', [], true), 
-            Configuration::get('MONEKCHECKOUT_BASKET_SUMMARY'));
-        $this->send_payment_request($body_data);
+            $this->context->link->getModuleLink($this->module->name, 'return', [], true),
+            Configuration::get('MONEKCHECKOUT_BASKET_SUMMARY'),
+        );
+        $this->sendPaymentRequest($bodyData);
     }
 
-       private function getCountryCode3Digit($iso_code_2digit)
+    private function getCountryCode3Digit($isoCode2Digit)
     {
         $converter = new CountryCodeConverter();
-        return $converter->getCountryCode3Digit($iso_code_2digit);
+        return $converter->getCountryCode3Digit($isoCode2Digit);
     }
 
-    private function get_ipay_prepare_url()
+    private function getIpayPrepareUrl()
     {
-        $ipay_prepare_extension = 'iPayPrepare.ashx';
-        return (Configuration::get('MONEKCHECKOUT_TEST_MODE') ? self::STAGING_URL : self::ELITE_URL) . $ipay_prepare_extension;
+        $ipayPrepareExtension = 'iPayPrepare.ashx';
+        return (Configuration::get('MONEKCHECKOUT_TEST_MODE') ? self::STAGING_URL : self::ELITE_URL) . $ipayPrepareExtension;
     }
 
-    private function get_ipay_url()
+    private function getIpayUrl()
     {
-        $ipay_extension = 'checkout.aspx';
-        return (Configuration::get('MONEKCHECKOUT_TEST_MODE') ? self::STAGING_URL : self::ELITE_URL) . $ipay_extension;
+        $ipayExtension = 'checkout.aspx';
+        return (Configuration::get('MONEKCHECKOUT_TEST_MODE') ? self::STAGING_URL : self::ELITE_URL) . $ipayExtension;
     }
 
-    private function send_payment_request($body_data)
+    private function sendPaymentRequest($bodyData)
     {
-        $prepared_payment_url = $this->get_ipay_prepare_url();
+        $preparedPaymentUrl = $this->getIpayPrepareUrl();
 
-        PrestaShopLogger::addLog('Sending prepared payment request.', 1, null, 'ps_monekcheckout', (int)$this->context->cart->id);
+        PrestaShopLogger::addLog('Sending prepared payment request.', 1, null, 'ps_monekcheckout', (int) $this->context->cart->id);
 
-        $curl_helper = new CurlHelper();
+        $curlHelper = new CurlHelper();
 
-        $response = $curl_helper->remote_post($this->context, $prepared_payment_url, $body_data, array(
-            'Content-Type' => 'application/x-www-form-urlencoded'
-        ));
+        $response = $curlHelper->remote_post(
+            $this->context,
+            $preparedPaymentUrl,
+            $bodyData,
+            [
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ],
+        );
 
-        if ($response->success) {            
-            $redirect_url = $this->get_ipay_url() . '?PreparedPayment=' . urlencode($response->body);
-            PrestaShopLogger::addLog('Redirecting to checkout page.', 1, null, 'ps_monekcheckout', (int)$this->context->cart->id);
-            return Tools::redirect($redirect_url);
+        if ($response->success) {
+            $redirectUrl = $this->getIpayUrl() . '?PreparedPayment=' . urlencode($response->body);
+
+            PrestaShopLogger::addLog('Redirecting to checkout page.', 1, null, 'ps_monekcheckout', (int) $this->context->cart->id);
+
+            return Tools::redirect($redirectUrl);
         } else {
-            die('Prepared payment request failed. Please contact support.');
+            exit;
         }
     }
 }
-
