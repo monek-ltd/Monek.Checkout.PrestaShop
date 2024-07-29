@@ -40,11 +40,12 @@ class ps_monekcheckout extends PaymentModule
     {
         $this->name = 'ps_monekcheckout';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.0';
+        $this->version = '1.0.1';
         $this->author = 'monek';
         $this->controllers = ['validation'];
         $this->is_eu_compatible = 1;
 
+        $this->module_key = 'c1614c239af92968e5fae97f366e9961';
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
         $this->bootstrap = true;
 
