@@ -45,6 +45,7 @@ class ps_monekcheckout extends PaymentModule
         $this->controllers = ['validation'];
         $this->is_eu_compatible = 1;
 
+        $this->module_key = 'c1614c239af92968e5fae97f366e9961';
         $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
         $this->bootstrap = true;
 
