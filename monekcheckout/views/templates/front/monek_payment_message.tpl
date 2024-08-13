@@ -26,8 +26,8 @@
 
 
 <div>
-	<img src="/modules/ps_monekcheckout/views/img/logo-2.png" alt="Monek Checkout Logo">
+	<img src="/modules/monekcheckout/views/img/logo-2.png" alt="Monek Checkout Logo">
 	<ul>
-			<li>{l s='Pay securely using Monek' mod='ps_monekcheckout'}.</li>
+			<li>{l s='Pay securely using Monek' mod='monekcheckout'}.</li>
 	</ul>
 </div>

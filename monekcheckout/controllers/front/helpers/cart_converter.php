@@ -237,7 +237,7 @@ class CartConverter
         $idempotency_token = uniqid($cart->id, true);
         $integrity_secret = uniqid($cart->id, true);
 
-        PrestaShopLogger::addLog('Saving identity tokens to database.', 1, null, 'ps_monekcheckout', (int) $cart->id);
+        PrestaShopLogger::addLog('Saving identity tokens to database.', 1, null, 'monekcheckout', (int) $cart->id);
 
         $data = [
             'id_cart' => (int) $cart->id,
@@ -260,7 +260,7 @@ class CartConverter
             'PaymentReference' => $cart->id,
             'ThreeDSAction' => 'ACSDIRECT',
             'IdempotencyToken' => $idempotency_token,
-            'OriginID' => self::PARTIAL_ORIGIN_ID . str_replace('.', '', Module::getInstanceByName('ps_monekcheckout')->version) . str_repeat('0', 14 - strlen(Module::getInstanceByName('ps_monekcheckout')->version)),
+            'OriginID' => self::PARTIAL_ORIGIN_ID . str_replace('.', '', Module::getInstanceByName('monekcheckout')->version) . str_repeat('0', 14 - strlen(Module::getInstanceByName('monekcheckout')->version)),
             'PurchaseDescription' => $purchase_description,
             'IntegritySecret' => $integrity_secret,
             'Basket' => $this->generate_basket_base64($cart),

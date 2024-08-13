@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module>
-    <name>ps_monekcheckout</name>
+    <name>monekcheckout</name>
     <displayName><![CDATA[Monek Checkout]]></displayName>
     <version><![CDATA[1.0.0]]></version>
     <description><![CDATA[Redirects to Monek Checkout for payment using debit/credit card.]]></description>
