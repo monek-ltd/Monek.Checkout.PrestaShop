@@ -28,7 +28,7 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-class ps_monekcheckout extends PaymentModule
+class monekcheckout extends PaymentModule
 {
     public const CONFIG_BASKET_SUMMARY = 'MONEKCHECKOUT_BASKET_SUMMARY';
     public const CONFIG_COUNTRY = 'MONEKCHECKOUT_COUNTRY';
@@ -38,9 +38,9 @@ class ps_monekcheckout extends PaymentModule
 
     public function __construct()
     {
-        $this->name = 'ps_monekcheckout';
+        $this->name = 'monekcheckout';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.1';
+        $this->version = '1.0.2';
         $this->author = 'monek';
         $this->controllers = ['validation'];
         $this->is_eu_compatible = 1;
@@ -78,7 +78,7 @@ class ps_monekcheckout extends PaymentModule
             throw new RuntimeException('Table creation failed');
         }
 
-        PrestaShopLogger::addLog('Payment tokens table created successfully.', 1, null, 'ps_monekcheckout');
+        PrestaShopLogger::addLog('Payment tokens table created successfully.', 1, null, 'monekcheckout');
 
         return parent::install()
             && $this->registerHook('paymentOptions')
@@ -100,7 +100,7 @@ class ps_monekcheckout extends PaymentModule
 
     private function createCustomOrderState()
     {
-        $orderStateExists = (bool) Db::getInstance()->getValue('SELECT COUNT(*) FROM ' . _DB_PREFIX_ . 'order_state WHERE module_name = "ps_monekcheckout"');
+        $orderStateExists = (bool) Db::getInstance()->getValue('SELECT COUNT(*) FROM ' . _DB_PREFIX_ . 'order_state WHERE module_name = "monekcheckout"');
 
         if ($orderStateExists) {
             return true;
@@ -115,7 +115,7 @@ class ps_monekcheckout extends PaymentModule
         $order_state->delivery = false;
         $order_state->logable = true;
         $order_state->invoice = false;
-        $order_state->module_name = 'ps_monekcheckout';
+        $order_state->module_name = 'monekcheckout';
 
         if ($order_state->add()) {
             Configuration::updateValue(self::AWAITING_ORDER_CONFIRMATION_STATE_ID, (int) $order_state->id);
@@ -267,7 +267,7 @@ class ps_monekcheckout extends PaymentModule
         $newOption = new PrestaShop\PrestaShop\Core\Payment\PaymentOption();
         $newOption->setCallToActionText($this->l('Pay by Debit/Credit Card'));
         $newOption->setAction($this->context->link->getModuleLink($this->name, 'validation', [], true));
-        $newOption->setAdditionalInformation($this->context->smarty->fetch('module:ps_monekcheckout/views/templates/front/monek_payment_message.tpl'));
+        $newOption->setAdditionalInformation($this->context->smarty->fetch('module:monekcheckout/views/templates/front/monek_payment_message.tpl'));
 
         return [$newOption];
     }
@@ -278,6 +278,6 @@ class ps_monekcheckout extends PaymentModule
             return;
         }
 
-        return $this->context->smarty->fetch('module:ps_monekcheckout/views/templates/front/payment_complete_message.tpl');
+        return $this->context->smarty->fetch('module:monekcheckout/views/templates/front/payment_complete_message.tpl');
     }
 }

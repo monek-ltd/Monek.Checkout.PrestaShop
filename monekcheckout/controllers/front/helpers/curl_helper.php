@@ -42,7 +42,7 @@ class CurlHelper
             ),
             3,
             null,
-            'ps_monekcheckout',
+            'monekcheckout',
             (int) $context->cart->id
         );
     }
@@ -55,10 +55,8 @@ class CurlHelper
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($body_data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
-        PrestaShopLogger::addLog('Executing curl.', 1, null, 'ps_monekcheckout', 0);
+        PrestaShopLogger::addLog('Executing curl.', 1, null, 'monekcheckout', 0);
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 

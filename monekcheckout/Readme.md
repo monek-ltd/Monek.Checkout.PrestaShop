@@ -23,7 +23,7 @@ Visit the [GitHub repository](https://github.com/monek-ltd/Monek.Checkout.Presta
 
 
 ### Step 2: Extract Plugin Files
-After downloading the [latest version](https://github.com/monek-ltd/Monek.Checkout.PrestaShop/releases/latest) Monek Checkout Module from the [GitHub repository](https://github.com/monek-ltd/Monek.Checkout.PrestaShop/), extract the contents of the ZIP file to your local machine. This will reveal the module files and folders. (Look for the "ps_monekcheckout" folder)
+After downloading the [latest version](https://github.com/monek-ltd/Monek.Checkout.PrestaShop/releases/latest) Monek Checkout Module from the [GitHub repository](https://github.com/monek-ltd/Monek.Checkout.PrestaShop/), extract the contents of the ZIP file to your local machine. This will reveal the module files and folders. (Look for the "monekcheckout" folder)
 
 
 ### Step 3: Connect to Your PrestaShop Site
@@ -31,7 +31,7 @@ Log in to your back office account and locate the module manager under the back 
 
 
 ### Step 4: Upload the Monek Checkout Module
-Locate the 'Upload a module' button in the top right hand corner of the screen, press this and the drag the ps_monekcheckout folder from your download into the dialog box that appears. 
+Locate the 'Upload a module' button in the top right hand corner of the screen, press this and the drag the monekcheckout folder from your download into the dialog box that appears. 
 
 (You may need to Zip this folder in order to upload it to your site).
 

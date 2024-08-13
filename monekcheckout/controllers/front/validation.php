@@ -32,14 +32,14 @@ require_once 'helpers/cart_converter.php';
 require_once 'helpers/countrycode_converter.php';
 require_once 'helpers/curl_helper.php';
 
-class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontController
+class monekcheckoutValidationModuleFrontController extends ModuleFrontController
 {
     public const ELITE_URL = 'https://elite.monek.com/Secure/';
     public const STAGING_URL = 'https://staging.monek.com/Secure/';
 
     public function postProcess()
     {
-        PrestaShopLogger::addLog('New Monek payment.', 1, null, 'ps_monekcheckout', (int) $this->context->cart->id);
+        PrestaShopLogger::addLog('New Monek payment.', 1, null, 'monekcheckout', (int) $this->context->cart->id);
 
         $cart = $this->context->cart;
         $cartConverter = new CartConverter();
@@ -77,7 +77,7 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
     {
         $preparedPaymentUrl = $this->getIpayPrepareUrl();
 
-        PrestaShopLogger::addLog('Sending prepared payment request.', 1, null, 'ps_monekcheckout', (int) $this->context->cart->id);
+        PrestaShopLogger::addLog('Sending prepared payment request.', 1, null, 'monekcheckout', (int) $this->context->cart->id);
 
         $curlHelper = new CurlHelper();
 
@@ -93,7 +93,7 @@ class Ps_MonekCheckoutValidationModuleFrontController extends ModuleFrontControl
         if ($response->success) {
             $redirectUrl = $this->getIpayUrl() . '?PreparedPayment=' . urlencode($response->body);
 
-            PrestaShopLogger::addLog('Redirecting to checkout page.', 1, null, 'ps_monekcheckout', (int) $this->context->cart->id);
+            PrestaShopLogger::addLog('Redirecting to checkout page.', 1, null, 'monekcheckout', (int) $this->context->cart->id);
 
             return Tools::redirect($redirectUrl);
         } else {
