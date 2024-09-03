@@ -72,6 +72,7 @@ class CurlHelper
                 $response
             );
             $success = false;
+            $response = 'Request failed. cURL error';
         } else {
             $success = true;
         }

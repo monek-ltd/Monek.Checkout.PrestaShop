@@ -166,7 +166,8 @@ class monekcheckoutReturnModuleFrontController extends ModuleFrontController
         if ($responseCode !== '00') {
             $note = 'Payment declined: ' . Tools::getValue('message');
             PrestaShopLogger::addLog($note, 2, $responseCode, 'monekcheckout', (int) $id_cart);
-            Tools::redirect('index.php?controller=order&step=1');
+            $this->context->cookie->__set('payment_error_message', $note);
+            Tools::redirect('index.php?controller=cart');
             return;
         }
 

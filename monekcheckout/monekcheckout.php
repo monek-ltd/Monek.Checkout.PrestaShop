@@ -40,7 +40,7 @@ class monekcheckout extends PaymentModule
     {
         $this->name = 'monekcheckout';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.2';
+        $this->version = '1.0.3';
         $this->author = 'monek';
         $this->controllers = ['validation'];
         $this->is_eu_compatible = 1;
@@ -83,6 +83,7 @@ class monekcheckout extends PaymentModule
         return parent::install()
             && $this->registerHook('paymentOptions')
             && $this->registerHook('paymentReturn')
+            && $this->registerHook('displayShoppingCart')
             && Configuration::updateValue(self::CONFIG_BASKET_SUMMARY, 'Goods')
             && Configuration::updateValue(self::CONFIG_COUNTRY, 'GB')
             && Configuration::updateValue(self::CONFIG_MONEK_ID, '')
@@ -256,6 +257,17 @@ class monekcheckout extends PaymentModule
         }
 
         return $options;
+    }
+
+    public function hookDisplayShoppingCart($params)
+    { 
+        if (isset($this->context->cookie->payment_error_message)) {
+            $this->context->smarty->assign('payment_error_message', $this->context->cookie->payment_error_message);
+            unset($this->context->cookie->payment_error_message);
+        
+            return $this->display(__FILE__, 'views/templates/front/payment_error.tpl');
+        }
+        return '';
     }
 
     public function hookPaymentOptions($params)
