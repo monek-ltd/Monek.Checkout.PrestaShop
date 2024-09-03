@@ -39,20 +39,27 @@ class monekcheckoutValidationModuleFrontController extends ModuleFrontController
 
     public function postProcess()
     {
-        PrestaShopLogger::addLog('New Monek payment.', 1, null, 'monekcheckout', (int) $this->context->cart->id);
+        try {
+            PrestaShopLogger::addLog('New Monek payment.', 1, null, 'monekcheckout', (int) $this->context->cart->id);
 
-        $cart = $this->context->cart;
-        $cartConverter = new CartConverter();
+            $cart = $this->context->cart;
+            $cartConverter = new CartConverter();
 
-        $bodyData = $cartConverter->prepare_payment_request_body_data(
-            $this->context,
-            $cart,
-            Configuration::get('MONEKCHECKOUT_MONEK_ID'),
-            $this->getCountryCode3Digit(Configuration::get('MONEKCHECKOUT_COUNTRY')),
-            $this->context->link->getModuleLink($this->module->name, 'return', [], true),
-            Configuration::get('MONEKCHECKOUT_BASKET_SUMMARY'),
-        );
-        $this->sendPaymentRequest($bodyData);
+            $bodyData = $cartConverter->prepare_payment_request_body_data(
+                $this->context,
+                $cart,
+                Configuration::get('MONEKCHECKOUT_MONEK_ID'),
+                $this->getCountryCode3Digit(Configuration::get('MONEKCHECKOUT_COUNTRY')),
+                $this->context->link->getModuleLink($this->module->name, 'return', [], true),
+                Configuration::get('MONEKCHECKOUT_BASKET_SUMMARY'),
+            );
+            $this->sendPaymentRequest($bodyData);
+        } catch (Exception $e) {
+			PrestaShopLogger::addLog($e->getMessage(), 3, null, 'monekcheckout', (int) $this->context->cart->id);
+		    $this->context->cookie->__set('payment_error_message', $e->getMessage());
+            Tools::redirect('index.php?controller=cart');
+            return;
+        }
     }
 
     private function getCountryCode3Digit($isoCode2Digit)
@@ -97,7 +104,7 @@ class monekcheckoutValidationModuleFrontController extends ModuleFrontController
 
             return Tools::redirect($redirectUrl);
         } else {
-            exit;
+            throw new Exception('Failed to send payment request: ' . $response->body);
         }
     }
 }
