@@ -28,6 +28,11 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+/**
+ * Class CountryCodeConverter - helper class for converting country codes
+ *
+ * @package monek
+ */
 class CountryCodeConverter
 {
     private $countryCodeMap = [
@@ -235,7 +240,13 @@ class CountryCodeConverter
         'ZW' => '716',
     ];
 
-    public function getCountryCode3Digit($iso_code_2digit)
+    /**
+    * Get the 3 digit country code from the 2 digit country code
+	 *
+	 * @param string $iso_code_2digit
+	 * @return string|null
+	 */
+    public function getCountryCode3Digit(string $iso_code_2digit)
     {
         if (array_key_exists($iso_code_2digit, $this->countryCodeMap)) {
             return $this->countryCodeMap[$iso_code_2digit];
