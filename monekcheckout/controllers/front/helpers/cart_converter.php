@@ -28,16 +28,33 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+/**
+ * Class CartConverter - converts the cart to the payment request body
+ *
+ * @package monek
+ */
 class CartConverter
 {
     private const PARTIAL_ORIGIN_ID = '7d07f975-b3c6-46b8-8f3a-';
 
-    private function convert_decimal_to_flat($amount)
+    /**
+     * Converts the decimal amount to flat
+	 *
+	 * @param float $amount
+	 * @return int
+	 */
+    private function convert_decimal_to_flat(float $amount) : int
     {
         return number_format($amount, 2, '.', '') * 100;
     }
 
-    private function generate_basket_base64($cart)
+    /**
+     * Generates the basket base64
+     *
+     * @param Cart $cart
+     * @return string
+	 */
+    private function generate_basket_base64(Cart $cart) : string
     {
         $order_items = $this->get_item_details($cart);
         $basket = [
@@ -93,7 +110,14 @@ class CartConverter
         return $basket_base64;
     }
 
-    private function generate_cardholder_detail_information($context, $request_body)
+    /**
+     * Generates the cardholder detail information
+	 *
+	 * @param Context $context
+	 * @param array $request_body
+	 * @return array
+     */
+    private function generate_cardholder_detail_information(Context $context,  array $request_body) : array
     {
         $billing_address = new Address($context->cart->id_address_invoice);
         $billing_country = new Country($billing_address->id_country);
@@ -131,7 +155,13 @@ class CartConverter
         return $merged_array;
     }
 
-    private function get_item_details($cart)
+    /**
+     * Get the item details
+     *
+     * @param Cart $cart
+     * @return array
+     */
+    private function get_item_details(Cart $cart) : array
     {
         $items_details = [];
 
@@ -152,7 +182,13 @@ class CartConverter
         return $items_details;
     }
 
-    private function get_order_delivery($cart)
+    /**
+     * Get the order delivery
+     *
+     * @param Cart $cart
+     * @return array
+	 */
+    private function get_order_delivery(Cart $cart) : array
     {
         $delivery = [];
         $carrier = new Carrier($cart->id_carrier);
@@ -168,7 +204,13 @@ class CartConverter
         return $delivery;
     }
 
-    private function get_order_discounts($cart)
+    /**
+     * Get the order discounts
+	 *
+	 * @param Cart $cart
+	 * @return array
+     */
+    private function get_order_discounts(Cart $cart) : array
     {
         $discounts = [];
         $cart_rules = $cart->getCartRules();
@@ -192,7 +234,13 @@ class CartConverter
         return $discounts;
     }
 
-    private function get_order_taxes($cart)
+    /**
+     * Get the order taxes
+     *
+     * @param Cart $cart
+     * @return array
+	 */
+    private function get_order_taxes(Cart $cart) : array
     {
         $taxes = [];
         $cart_products = $cart->getProducts();
@@ -224,13 +272,32 @@ class CartConverter
         return $taxes;
     }
 
-    private function get_iso4217_currency_code($context)
+    /**
+     * Get the ISO4217 currency code
+	 *
+	 * @param Context $context
+	 * @return string
+     */
+    private function get_iso4217_currency_code(Context $context) : string
     {
         $currency = $context->currency;
         return $currency->iso_code_num;
     }
 
-    public function prepare_payment_request_body_data($context, $cart, $merchant_id, $country_code, $return_plugin_url, $purchase_description)
+    /**
+     * Prepare the payment request body data
+     *
+     * @param Context $context
+     * @param Cart $cart
+     * @param string $merchant_id
+     * @param string $country_code
+     * @param string $return_plugin_url
+     * @param string $webhook_url
+     * @param string $purchase_description
+     * @return array
+	 */
+    public function prepare_payment_request_body_data(Context $context, Cart $cart, string $merchant_id, string $country_code, 
+        string $return_plugin_url, string $webhook_url, string $purchase_description) : array
     {
         $billing_amount = $cart->getOrderTotal(true, Cart::BOTH);
 
@@ -256,7 +323,7 @@ class CartConverter
             'Dispatch' => 'NOW',
             'ResponseAction' => 'REDIRECT',
             'RedirectUrl' => $return_plugin_url,
-            'WebhookUrl' => $return_plugin_url,
+            'WebhookUrl' => $webhook_url,
             'PaymentReference' => $cart->id,
             'ThreeDSAction' => 'ACSDIRECT',
             'IdempotencyToken' => $idempotency_token,
