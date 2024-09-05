@@ -50,6 +50,12 @@ If you don't have the necessary information, such as your Monek ID, visit [Monek
 
 
 ## Known Issues:
-There are currently no known issues, if you experience any issues please report them asap, visit [Monek Contact Page](https://monek.com/contact) to get help. 
 
-Tested on PrestaShop versions: 8.1.7, 8.1.6
+### Failed Payment Redirect
+Having 'Increase front office security' enabled prevents a redirect to the cart/basket summary page.
+
+- When a customer payment fails for any reason they are redirected to the homepage rather than redirected to the cart/basket.
+- The error message is still seen from the cart/basket as the user clicks back into the basket.
+- This can be fixed by disabling 'Increase front office security' from the General Settins tab, this disables token in the front office.
+
+Tested on PrestaShop versions: 8.1.7, 8.1.6, 8.1.2

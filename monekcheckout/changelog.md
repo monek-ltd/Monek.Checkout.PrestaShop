@@ -1,6 +1,9 @@
 # Monek.Checkout.PrestaShop
 ### Monek Checkout Changelog
 
+#### September 05 2024 - Version 1.0.5
+* Fixed - Validating declined orders.
+
 #### September 04 2024 - Version 1.0.4
 * Updated - Refactored return controller code to improve separation.
 * Added - Added php doc comments to improve readability.

@@ -160,32 +160,33 @@ class monekcheckoutWebhookModuleFrontController extends ModuleFrontController
 
                 return;
             }
+            if($payload->response_code == '00') {
+                $cart = new Cart($payload->payment_reference);
 
-            $cart = new Cart($payload->payment_reference);
-
-            $response = $this->confirm_integrity_digest((int) $this->context->cart->id, $payload);
+                $response = $this->confirm_integrity_digest((int) $this->context->cart->id, $payload);
             
-            $order = $this->create_order($cart);
+                $order = $this->create_order($cart);
 
-            if (!$order->id) {
-                PrestaShopLogger::addLog('Something went wrong.', 3, null, 'monekcheckout', (int) $order->id);
-                header('HTTP/1.1 400 Bad Request');
-                echo json_encode(['error' => 'Bad Request']);
-                return;
-            }
+                if (!$order->id) {
+                    PrestaShopLogger::addLog('Something went wrong.', 3, null, 'monekcheckout', (int) $order->id);
+                    header('HTTP/1.1 400 Bad Request');
+                    echo json_encode(['error' => 'Bad Request']);
+                    return;
+                }
 
-            if ($response) {
-                PrestaShopLogger::addLog('Payment confirmed - Updating order state.', 1, null, 'monekcheckout', (int) $order->id);
-                $history = new OrderHistory();
-                $history->id_order = (int) $order->id;
-                $history->changeIdOrderState(Configuration::get('PS_OS_PAYMENT'), (int) $order->id);
-                $history->add(true);
+                if ($response) {
+                    PrestaShopLogger::addLog('Payment confirmed - Updating order state.', 1, null, 'monekcheckout', (int) $order->id);
+                    $history = new OrderHistory();
+                    $history->id_order = (int) $order->id;
+                    $history->changeIdOrderState(Configuration::get('PS_OS_PAYMENT'), (int) $order->id);
+                    $history->add(true);
 
-                $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
-            } else {
-                PrestaShopLogger::addLog('Payment confirmation failed. Please contact support.', 4, null, 'monekcheckout', (int) $order->id);
-                header('HTTP/1.1 400 Bad Request');
-                echo json_encode(['error' => 'Bad Request']);
+                    $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
+                } else {
+                    PrestaShopLogger::addLog('Payment confirmation failed. Please contact support.', 4, null, 'monekcheckout', (int) $order->id);
+                    header('HTTP/1.1 400 Bad Request');
+                    echo json_encode(['error' => 'Bad Request']);
+                }
             }
         } else {
             header('HTTP/1.1 405 Method Not Allowed');
