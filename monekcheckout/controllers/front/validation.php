@@ -61,6 +61,7 @@ class monekcheckoutValidationModuleFrontController extends ModuleFrontController
             $basketSummary = pSQL(Configuration::get('MONEKCHECKOUT_BASKET_SUMMARY'));
             $returnUrl = filter_var($this->context->link->getModuleLink($this->module->name, 'return', [], true), FILTER_SANITIZE_URL);
             $webhookUrl = filter_var($this->context->link->getModuleLink($this->module->name, 'webhook', [], true), FILTER_SANITIZE_URL);
+            $enableGooglePay = pSQL(Configuration::get('MONEKCHECKOUT_GOOGLE_PAY'));
 
             $bodyData = $cartConverter->prepare_payment_request_body_data(
                 $this->context,
@@ -70,6 +71,7 @@ class monekcheckoutValidationModuleFrontController extends ModuleFrontController
                 $returnUrl,
                 $webhookUrl,
                 $basketSummary,
+                $enableGooglePay
             );
 
             $this->sendPaymentRequest($bodyData);
