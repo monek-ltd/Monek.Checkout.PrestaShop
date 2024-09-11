@@ -46,7 +46,15 @@ Save changes to apply the configuration.
 If you don't have the necessary information, such as your Monek ID, visit [Monek Contact Page](https://monek.com/contact) to get help. Ensure that all information entered is accurate to enable seamless payment processing on your WooCommerce store.
 
 
+## Configuration
 
+### GooglePay: 
+
+Indicates if the Google Pay™ button will appear on the checkout page. `YES` or `NO` (default)
+
+All merchants must adhere to the Google Pay APIs [Acceptable Use Policy](https://payments.developers.google.com/terms/aup) and accept the terms defined in the [Google Pay API Terms of Service](https://payments.developers.google.com/terms/sellertos). 
+
+Google Pay is a trademark of Google LLC.
 
 
 ## Known Issues:
