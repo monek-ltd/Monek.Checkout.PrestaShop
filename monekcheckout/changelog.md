@@ -1,6 +1,10 @@
 # Monek.Checkout.PrestaShop
 ### Monek Checkout Changelog
 
+#### September 12 2024 - version 1.1.1
+* Fixed - Removed the response method check for the webhook as it sometimes caused an issue with the order confirmation.
+* Fixed - Fixed an issue where the order status was not updating correctly after a successful payment because it failed the integrity check.
+
 #### September 10 2024 - version 1.1.0
 * Added - Added a new feature to allow the user to enable GooglePay as a payment method
 

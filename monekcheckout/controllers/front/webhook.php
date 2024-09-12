@@ -50,6 +50,8 @@ class monekcheckoutWebhookModuleFrontController extends ModuleFrontController
 	 */
     public function postProcess() : void
     {
+        PrestaShopLogger::addLog('Webhook detected.', 1, null, 'monekcheckout', (int) $this->context->cart->id);
+
         $json_echo = file_get_contents('php://input');
         $transaction_webhook_payload_data = json_decode($json_echo, true);
         $payload = new WebhookPayload($transaction_webhook_payload_data);
@@ -63,19 +65,19 @@ class monekcheckoutWebhookModuleFrontController extends ModuleFrontController
      * @param WebhookPayload $payload
      * @return bool
      */
-    private function confirm_integrity_digest(int $cartId, WebhookPayload $payload) : bool
+    private function confirm_integrity_digest(WebhookPayload $payload) : bool
     {
         try {
-            PrestaShopLogger::addLog('Attempting to confirm integrity digest.', 1, null, 'monekcheckout', $cartId);
+            PrestaShopLogger::addLog('Attempting to confirm integrity digest.', 1, null, 'monekcheckout', $payload->payment_reference);
 
-            $sql = 'SELECT `idempotency_token`, `integrity_secret` FROM `' . _DB_PREFIX_ . 'payment_tokens` WHERE `id_cart` = ' . $cartId;
+            $sql = 'SELECT `idempotency_token`, `integrity_secret` FROM `' . _DB_PREFIX_ . 'payment_tokens` WHERE `id_cart` = ' . $payload->payment_reference;
             $result = Db::getInstance()->getRow($sql);
 
             $idempotency_token = $result['idempotency_token'];
             $integrity_secret = $result['integrity_secret'];
 
             if (!isset($integrity_secret) || $integrity_secret == '') {
-                PrestaShopLogger::addLog('Failed to retrieve secret', 3, null, 'monekcheckout', $cartId);
+                PrestaShopLogger::addLog('Failed to retrieve secret', 3, null, 'monekcheckout', $$payload->payment_reference);
                 return false;
             }
 
@@ -102,14 +104,14 @@ class monekcheckoutWebhookModuleFrontController extends ModuleFrontController
             $response = $curl_helper->remote_post($this->context, $integrity_check_url, $body_data, $headers);
 
             if ($response->success) {
-                PrestaShopLogger::addLog('integrity confirmed.', 1, null, 'monekcheckout', $cartId);
+                PrestaShopLogger::addLog('integrity confirmed.', 1, null, 'monekcheckout', $payload->payment_reference);
                 return true;
             } else {
-                PrestaShopLogger::addLog('Failed to confirm integrity.', 3, null, 'monekcheckout', $cartId);
+                PrestaShopLogger::addLog('Failed to confirm integrity.', 3, null, 'monekcheckout', $payload->payment_reference);
                 return false;
             }
         } catch (Exception $e) {
-            PrestaShopLogger::addLog(' Exception: ' . $e->getMessage(), 3, null, 'monekcheckout', $cartId);
+            PrestaShopLogger::addLog(' Exception: ' . $e->getMessage(), 3, null, 'monekcheckout', $payload->payment_reference);
             return false;
         }
     }
@@ -151,47 +153,40 @@ class monekcheckoutWebhookModuleFrontController extends ModuleFrontController
      */
     private function process_transaction_webhook_payload(WebhookPayload  $payload) : void
     {
-        if (filter_input(INPUT_SERVER, 'REQUEST_METHOD', FILTER_SANITIZE_FULL_SPECIAL_CHARS) === 'POST') {
-
-            if (!$payload->validate()) {
+        if (!$payload->validate()) {
                 PrestaShopLogger::addLog('Webhook failed validation', 2, null, 'monekcheckout', (int) $this->context->cart->id);
                 header('HTTP/1.1 400 Bad Request');
                 echo json_encode(['error' => 'Bad Request']);
 
                 return;
-            }
-            if($payload->response_code == '00') {
-                $cart = new Cart($payload->payment_reference);
+        }
+        if($payload->response_code == '00') {
+            $cart = new Cart($payload->payment_reference);
 
-                $response = $this->confirm_integrity_digest((int) $this->context->cart->id, $payload);
+            $response = $this->confirm_integrity_digest($payload);
             
-                $order = $this->create_order($cart);
+            $order = $this->create_order($cart);
 
-                if (!$order->id) {
-                    PrestaShopLogger::addLog('Something went wrong.', 3, null, 'monekcheckout', (int) $order->id);
-                    header('HTTP/1.1 400 Bad Request');
-                    echo json_encode(['error' => 'Bad Request']);
-                    return;
-                }
-
-                if ($response) {
-                    PrestaShopLogger::addLog('Payment confirmed - Updating order state.', 1, null, 'monekcheckout', (int) $order->id);
-                    $history = new OrderHistory();
-                    $history->id_order = (int) $order->id;
-                    $history->changeIdOrderState(Configuration::get('PS_OS_PAYMENT'), (int) $order->id);
-                    $history->add(true);
-
-                    $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
-                } else {
-                    PrestaShopLogger::addLog('Payment confirmation failed. Please contact support.', 4, null, 'monekcheckout', (int) $order->id);
-                    header('HTTP/1.1 400 Bad Request');
-                    echo json_encode(['error' => 'Bad Request']);
-                }
+            if (!$order->id) {
+                PrestaShopLogger::addLog('Something went wrong.', 3, null, 'monekcheckout', (int) $order->id);
+                header('HTTP/1.1 400 Bad Request');
+                echo json_encode(['error' => 'Bad Request']);
+                return;
             }
-        } else {
-            header('HTTP/1.1 405 Method Not Allowed');
-            header('Allow: POST');
-            echo json_encode(['error' => 'Method Not Allowed']);
+
+            if ($response) {
+                PrestaShopLogger::addLog('Payment confirmed - Updating order state.', 1, null, 'monekcheckout', (int) $order->id);
+                $history = new OrderHistory();
+                $history->id_order = (int) $order->id;
+                $history->changeIdOrderState(Configuration::get('PS_OS_PAYMENT'), (int) $order->id);
+                $history->add(true);
+
+                $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
+            } else {
+                PrestaShopLogger::addLog('Payment confirmation failed. Please contact support.', 4, null, 'monekcheckout', (int) $order->id);
+                header('HTTP/1.1 400 Bad Request');
+                echo json_encode(['error' => 'Bad Request']);
+            }
         }
     }
 }
