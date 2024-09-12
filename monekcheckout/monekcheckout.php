@@ -37,7 +37,6 @@ class monekcheckout extends PaymentModule
 {
     public const CONFIG_BASKET_SUMMARY = 'MONEKCHECKOUT_BASKET_SUMMARY';
     public const CONFIG_COUNTRY = 'MONEKCHECKOUT_COUNTRY';
-    public const CONFIG_GOOGLE_PAY = 'MONEKCHECKOUT_GOOGLE_PAY';
     public const CONFIG_MONEK_ID = 'MONEKCHECKOUT_MONEK_ID';
     public const CONFIG_TEST_MODE = 'MONEKCHECKOUT_TEST_MODE';
     public const AWAITING_ORDER_CONFIRMATION_STATE_ID = 'AWAITING_ORDER_CONFIRMATION_STATE_ID';
@@ -46,7 +45,7 @@ class monekcheckout extends PaymentModule
     {
         $this->name = 'monekcheckout';
         $this->tab = 'payments_gateways';
-        $this->version = '1.1.0';
+        $this->version = '1.0.5';
         $this->author = 'monek';
         $this->controllers = ['validation'];
         $this->is_eu_compatible = 1;
@@ -99,8 +98,7 @@ class monekcheckout extends PaymentModule
             && Configuration::updateValue(self::CONFIG_BASKET_SUMMARY, 'Goods')
             && Configuration::updateValue(self::CONFIG_COUNTRY, 'GB')
             && Configuration::updateValue(self::CONFIG_MONEK_ID, '')
-            && Configuration::updateValue(self::CONFIG_TEST_MODE, '')
-            && Configuration::updateValue(self::CONFIG_GOOGLE_PAY, '');
+            && Configuration::updateValue(self::CONFIG_TEST_MODE, '');
     }
 
     /**
@@ -114,8 +112,7 @@ class monekcheckout extends PaymentModule
             && Configuration::deleteByName(self::CONFIG_BASKET_SUMMARY)
             && Configuration::deleteByName(self::CONFIG_COUNTRY)
             && Configuration::deleteByName(self::CONFIG_MONEK_ID)
-            && Configuration::deleteByName(self::CONFIG_TEST_MODE)
-            && Configuration::deleteByName(self::CONFIG_GOOGLE_PAY);
+            && Configuration::deleteByName(self::CONFIG_TEST_MODE);
     }
 
     /**
@@ -164,7 +161,6 @@ class monekcheckout extends PaymentModule
             $country = pSQL(Tools::getValue(self::CONFIG_COUNTRY));
             $monekid = pSQL(trim(Tools::getValue(self::CONFIG_MONEK_ID)));
             $testMode = Tools::getValue(self::CONFIG_TEST_MODE);
-            $googlePayEnabled = Tools::getValue(self::CONFIG_GOOGLE_PAY);
 
             if (empty($monekid)) {
                 $output .= $this->displayError($this->l('Invalid Monek ID'));
@@ -177,7 +173,6 @@ class monekcheckout extends PaymentModule
                 Configuration::updateValue(self::CONFIG_COUNTRY, $country);
                 Configuration::updateValue(self::CONFIG_MONEK_ID, $monekid);
                 Configuration::updateValue(self::CONFIG_TEST_MODE, $testMode);
-                Configuration::updateValue(self::CONFIG_GOOGLE_PAY, $googlePayEnabled);
                 $output .= $this->displayConfirmation($this->l('Settings updated'));
             }
         }
@@ -236,25 +231,6 @@ class monekcheckout extends PaymentModule
                         ],
                     ],
                     [
-                        'type' => 'switch',
-                        'label' => $this->l('Enable GooglePay'),
-                        'name' => self::CONFIG_GOOGLE_PAY,
-                        'is_bool' => true,
-                        'values' => [
-                            [
-                                'id' => self::CONFIG_GOOGLE_PAY . '_on',
-                                'value' => true,
-                                'label' => $this->l('Enabled'),
-                            ],
-                            [
-                                'id' => self::CONFIG_GOOGLE_PAY . '_off',
-                                'value' => false,
-                                'label' => $this->l('Disabled'),
-                            ],
-                        ],
-                        'desc' => $this->l('Enable this option to provide access to GooglePay as a payment option. Merchants must adhere to the Google Pay APIs Acceptable Use Policy and accept the terms defined in the Google Pay API Terms of Service.'),
-                    ],
-                    [
                         'type' => 'text',
                         'label' => $this->l('Basket Summary'),
                         'name' => self::CONFIG_BASKET_SUMMARY,
@@ -301,7 +277,6 @@ class monekcheckout extends PaymentModule
             self::CONFIG_COUNTRY => Tools::getValue(self::CONFIG_COUNTRY, Configuration::get(self::CONFIG_COUNTRY)),
             self::CONFIG_MONEK_ID => Tools::getValue(self::CONFIG_MONEK_ID, Configuration::get(self::CONFIG_MONEK_ID)),
             self::CONFIG_TEST_MODE => Tools::getValue(self::CONFIG_TEST_MODE, Configuration::get(self::CONFIG_TEST_MODE)),
-            self::CONFIG_GOOGLE_PAY => Tools::getValue(self::CONFIG_GOOGLE_PAY, Configuration::get(self::CONFIG_GOOGLE_PAY)),
         ];
     }
 
