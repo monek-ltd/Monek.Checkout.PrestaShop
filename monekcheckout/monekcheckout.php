@@ -45,7 +45,7 @@ class monekcheckout extends PaymentModule
     {
         $this->name = 'monekcheckout';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.5';
+        $this->version = '1.0.4';
         $this->author = 'monek';
         $this->controllers = ['validation'];
         $this->is_eu_compatible = 1;

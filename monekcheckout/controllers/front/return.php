@@ -47,37 +47,41 @@ class monekcheckoutReturnModuleFrontController extends ModuleFrontController
      */
     public function postProcess() : void
     {
-        PrestaShopLogger::addLog('Callback detected.', 1, null, 'monekcheckout', (int) $this->context->cart->id);
+         PrestaShopLogger::addLog('Callback detected.', 1, null, 'monekcheckout', (int) $this->context->cart->id);
 
-        $callback = new Callback();
+         $callback = new Callback();
+
+        if (!$callback->payment_reference) {
+            Tools::redirect('index.php');
+            return;
+        }
 
         if ($callback->response_code !== '00') {
             $note = "Payment declined: {$callback->message}";
             PrestaShopLogger::addLog($note, 2, $callback->response_code, 'monekcheckout', (int) $callback->payment_reference);
             $this->context->cookie->__set('payment_error_message', $note);
-            Tools::redirect($this->context->link->getPageLink('cart', true));
+            Tools::redirect('index.php?controller=cart');
+            return;
         }
-        else 
-        {
-            $cart = new Cart($callback->payment_reference);
 
-            $order = OrderBuilder::create_order($cart, 'Callback', $this->context, $this->module);
+        $cart = new Cart($callback->payment_reference);
 
-            PrestaShopLogger::addLog('redirecting to confirmation page', 1, $callback->response_code, 'monekcheckout', (int) $order->id);
+        $order = OrderBuilder::create_order($cart, 'Callback', $this->context, $this->module);
 
-            Tools::redirect(
-                $this->context->link->getPageLink(
-                    'order-confirmation',
-                    true,
-                    (int) $this->context->language->id,
-                    [
-                        'id_cart' => (int) $order->id_cart,
-                        'id_module' => (int) $this->module->id,
-                        'id_order' => (int) $order->id,
-                        'key' => $order->secure_key,
-                    ]
-                )
-            );
-        }
+        PrestaShopLogger::addLog('redirecting to confirmation page', 1, $callback->response_code, 'monekcheckout', (int) $order->id);
+
+        Tools::redirect(
+            $this->context->link->getPageLink(
+                'order-confirmation',
+                true,
+                (int) $this->context->language->id,
+                [
+                    'id_cart' => (int) $order->id_cart,
+                    'id_module' => (int) $this->module->id,
+                    'id_order' => (int) $order->id,
+                    'key' => $order->secure_key,
+                ]
+            )
+        );
     }
 }
