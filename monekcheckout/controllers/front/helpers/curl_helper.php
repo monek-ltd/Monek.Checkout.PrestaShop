@@ -28,24 +28,9 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-/**
- * Class CurlHelper - helper class for cURL requests
- *
- * @package monek
- */
 class CurlHelper
 {
-    /**
-	 * Logs the error
-	 *
-	 * @param Context $context
-	 * @param int $curl_errno
-	 * @param string $curl_error
-	 * @param int $http_code
-	 * @param string $response
-	 * @return void
-	 */
-    private function log_error(Context $context, int $curl_errno, string $curl_error, int $http_code, string $response) : void
+    private function log_error($context, $curl_errno, $curl_error, $http_code, $response)
     {
         PrestaShopLogger::addLog(
             sprintf(
@@ -62,16 +47,7 @@ class CurlHelper
         );
     }
 
-    /**
-    * Executes a remote POST request
-    *
-    * @param Context $context
-    * @param string $url
-    * @param array $body_data
-    * @param array $headers
-    * @return RemotePostResponse
-	*/
-    public function remote_post(Context $context, string $url, array $body_data, array $headers) : RemotePostResponse
+    public function remote_post($context, $url, $body_data, $headers)
     {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -107,25 +83,13 @@ class CurlHelper
     }
 }
 
-/**
- * Class RemotePostResponse - response from a remote POST request
- *
- * @package monek
- */
 class RemotePostResponse
 {
     public $body;
     public $httpCode;
     public $success;
 
-    /**
-    * Constructor
-	 *
-	 * @param string $body
-	 * @param int $httpCode
-	 * @param bool $success
-	 */
-    public function __construct(string $body, int $httpCode, bool $success)
+    public function __construct($body, $httpCode, $success)
     {
         $this->body = $body;
         $this->httpCode = $httpCode;

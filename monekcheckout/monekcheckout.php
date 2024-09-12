@@ -28,11 +28,6 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-/**
- * Class monekcheckout - Monek Checkout Payment Module
- *
- * @package monek
- */
 class monekcheckout extends PaymentModule
 {
     public const CONFIG_BASKET_SUMMARY = 'MONEKCHECKOUT_BASKET_SUMMARY';
@@ -45,7 +40,7 @@ class monekcheckout extends PaymentModule
     {
         $this->name = 'monekcheckout';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.4';
+        $this->version = '1.0.3';
         $this->author = 'monek';
         $this->controllers = ['validation'];
         $this->is_eu_compatible = 1;
@@ -62,12 +57,7 @@ class monekcheckout extends PaymentModule
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
     }
 
-    /**
-     * Install the module
-	 *
-	 * @return bool
-	 */
-    public function install() : bool
+    public function install()
     {
         if (!$this->createCustomOrderState()) {
             return false;
@@ -81,7 +71,6 @@ class monekcheckout extends PaymentModule
             `id_cart` int(10) unsigned NOT NULL,
             `idempotency_token` varchar(255) NOT NULL,
             `integrity_secret` varchar(255) NOT NULL,
-            `confirmation_received` BOOLEAN NOT NULL DEFAULT 0,
             PRIMARY KEY (`id_cart`)
         ) ENGINE=$engine DEFAULT CHARSET=$charset;";
 
@@ -101,12 +90,7 @@ class monekcheckout extends PaymentModule
             && Configuration::updateValue(self::CONFIG_TEST_MODE, '');
     }
 
-    /**
-	 * Uninstall the module
-     *
-     * @return bool
-	 */
-    public function uninstall() : bool
+    public function uninstall()
     {
         return parent::uninstall()
             && Configuration::deleteByName(self::CONFIG_BASKET_SUMMARY)
@@ -115,12 +99,7 @@ class monekcheckout extends PaymentModule
             && Configuration::deleteByName(self::CONFIG_TEST_MODE);
     }
 
-    /**
-	 * Create custom order state - Awaiting Payment Confirmation
-	 *
-	 * @return bool
-	 */
-    private function createCustomOrderState() : bool
+    private function createCustomOrderState()
     {
         $orderStateExists = (bool) Db::getInstance()->getValue('SELECT COUNT(*) FROM ' . _DB_PREFIX_ . 'order_state WHERE module_name = "monekcheckout"');
 
@@ -147,19 +126,14 @@ class monekcheckout extends PaymentModule
         }
     }
 
-    /**
-     * Updates the configuration setting values
-     *
-     * @return string
-	 */
-    public function getContent() : string
+    public function getContent()
     {
         $output = '';
 
-        if (Tools::isSubmit("submit{$this->name}")) {
-            $basketSummary = pSQL(trim(Tools::getValue(self::CONFIG_BASKET_SUMMARY)));
-            $country = pSQL(Tools::getValue(self::CONFIG_COUNTRY));
-            $monekid = pSQL(trim(Tools::getValue(self::CONFIG_MONEK_ID)));
+        if (Tools::isSubmit('submit' . $this->name)) {
+            $basketSummary = Tools::getValue(self::CONFIG_BASKET_SUMMARY);
+            $country = Tools::getValue(self::CONFIG_COUNTRY);
+            $monekid = Tools::getValue(self::CONFIG_MONEK_ID);
             $testMode = Tools::getValue(self::CONFIG_TEST_MODE);
 
             if (empty($monekid)) {
@@ -180,12 +154,7 @@ class monekcheckout extends PaymentModule
         return $output . $this->renderForm();
     }
 
-    /**
-	 * Render the configuration form
-	 *
-	 * @return string
-     */
-    protected function renderForm() : string
+    protected function renderForm()
     {
         $fieldsForm = [
             'form' => [
@@ -265,12 +234,7 @@ class monekcheckout extends PaymentModule
         return $helper->generateForm([$fieldsForm]);
     }
 
-    /**
-     * Get the configuration field values
-     *
-     * @return array
-	 */
-    protected function getConfigFieldsValues() : array
+    protected function getConfigFieldsValues()
     {
         return [
             self::CONFIG_BASKET_SUMMARY => Tools::getValue(self::CONFIG_BASKET_SUMMARY, Configuration::get(self::CONFIG_BASKET_SUMMARY)),
@@ -280,12 +244,7 @@ class monekcheckout extends PaymentModule
         ];
     }
 
-    /**
-	 * Get the country options
-	 *
-	 * @return array
-     */
-    protected function getCountryOptions() : array
+    protected function getCountryOptions()
     {
         $countries = Country::getCountries($this->context->language->id);
         $options = [];
@@ -300,16 +259,10 @@ class monekcheckout extends PaymentModule
         return $options;
     }
 
-    /**
-     * Display the payment error message
-     *
-     * @param array $params
-     * @return string
-	 */
-    public function hookDisplayShoppingCart(array $params) : string
+    public function hookDisplayShoppingCart($params)
     { 
         if (isset($this->context->cookie->payment_error_message)) {
-            $this->context->smarty->assign('payment_error_message', htmlspecialchars($this->context->cookie->payment_error_message));
+            $this->context->smarty->assign('payment_error_message', $this->context->cookie->payment_error_message);
             unset($this->context->cookie->payment_error_message);
         
             return $this->display(__FILE__, 'views/templates/front/payment_error.tpl');
@@ -317,16 +270,10 @@ class monekcheckout extends PaymentModule
         return '';
     }
 
-    /**
-     * Display the monek checkout payment option
-     *
-     * @param array $params
-     * @return array
-     */
-    public function hookPaymentOptions(array $params) : array
+    public function hookPaymentOptions($params)
     {
         if (!$this->active) {
-            return [];
+            return;
         }
 
         $newOption = new PrestaShop\PrestaShop\Core\Payment\PaymentOption();
@@ -337,16 +284,10 @@ class monekcheckout extends PaymentModule
         return [$newOption];
     }
 
-    /**
-     * Display the payment complete message
-	 *
-	 * @param array $params
-	 * @return string
-	 */
-    public function hookPaymentReturn(array $params) : string
+    public function hookPaymentReturn($params)
     {
         if (!$this->active) {
-            return '';
+            return;
         }
 
         return $this->context->smarty->fetch('module:monekcheckout/views/templates/front/payment_complete_message.tpl');
