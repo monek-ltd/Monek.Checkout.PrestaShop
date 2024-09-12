@@ -71,7 +71,7 @@ class monekcheckoutValidationModuleFrontController extends ModuleFrontController
                 $returnUrl,
                 $webhookUrl,
                 $basketSummary,
-                $enableGooglePay
+                (bool)$enableGooglePay
             );
 
             $this->sendPaymentRequest($bodyData);
