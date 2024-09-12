@@ -1,9 +1,6 @@
 # Monek.Checkout.PrestaShop
 ### Monek Checkout Changelog
 
-#### September 10 2024 - version 1.1.0
-* Added - Added a new feature to allow the user to enable GooglePay as a payment method
-
 #### September 05 2024 - Version 1.0.5
 * Fixed - Validating declined orders.
 

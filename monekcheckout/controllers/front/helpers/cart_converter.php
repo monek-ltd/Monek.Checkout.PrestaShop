@@ -297,7 +297,7 @@ class CartConverter
      * @return array
 	 */
     public function prepare_payment_request_body_data(Context $context, Cart $cart, string $merchant_id, string $country_code, 
-        string $return_plugin_url, string $webhook_url, string $purchase_description, bool $enableGooglePay) : array
+        string $return_plugin_url, string $webhook_url, string $purchase_description) : array
     {
         $billing_amount = $cart->getOrderTotal(true, Cart::BOTH);
 
@@ -331,8 +331,7 @@ class CartConverter
             'PurchaseDescription' => $purchase_description,
             'IntegritySecret' => $integrity_secret,
             'Basket' => $this->generate_basket_base64($cart),
-            'ShowDeliveryAddress' => 'YES',            
-            'ShowGooglePay' => $enableGooglePay ? 'YES' : 'NO',
+            'ShowDeliveryAddress' => 'YES',
         ];
 
         $body_data = $this->generate_cardholder_detail_information($context, $body_data);
